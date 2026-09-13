@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { MapContainer, Marker, Polyline, TileLayer, Tooltip } from 'react-leaflet';
+import React, { useEffect, useRef, useState } from 'react';
+import { Circle, CircleMarker, MapContainer, Marker, Polyline, TileLayer, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './Investigation.css';
@@ -44,7 +44,7 @@ function speakWithNaturalVoice(text, language) {
   window.speechSynthesis.speak(voice);
 }
 
-function RouteMapView({ incident, language, predictionStep }) {
+function RouteMapView({ incident, language, predictionStep, layers }) {
   const mapRef = useRef(null);
   const route = incident.id === 'ALT-20260908-001'
     ? [[21.1702, 72.8311], [21.19, 72.84], [21.205, 72.86], [21.225, 72.88], [21.245, 72.90]]
@@ -80,11 +80,12 @@ function RouteMapView({ incident, language, predictionStep }) {
   return (
     <MapContainer ref={mapRef} className="investigation-leaflet-map" center={mapCenter} zoom={11} scrollWheelZoom={false} zoomControl={true}>
       <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      <Polyline positions={route.slice(0, predictionStep + 1)} pathOptions={{ color: '#ef4b5c', weight: 6, opacity: 0.9 }} />
-      <Polyline positions={route.slice(Math.max(predictionStep - 1, 0))} pathOptions={{ color: '#2781aa', weight: 4, opacity: 0.72, dashArray: '8 9' }} />
-      <Marker position={route[0]} icon={vehicleIcon} eventHandlers={{ click: () => focusPoint(route[0], vehicleStatus) }}><Tooltip permanent direction="top" offset={[0, -14]}>Last camera · {incident.location}</Tooltip></Marker>
-      <Marker position={route[Math.floor(route.length / 2)]} icon={officerIcon} eventHandlers={{ click: () => focusPoint(route[Math.floor(route.length / 2)], officerStatus) }}><Tooltip permanent direction="right" offset={[12, 0]}>{incident.officer} · {incident.eta} ETA</Tooltip></Marker>
-      <Marker position={predictedPoint} icon={nextPointIcon} eventHandlers={{ click: () => focusPoint(predictedPoint, destinationStatus) }}><Tooltip permanent direction="top" offset={[0, -12]}>Predicted next · {incident.officerLocation}</Tooltip></Marker>
+      {layers.route && <><Polyline positions={route.slice(0, predictionStep + 1)} pathOptions={{ color: '#ef4b5c', weight: 6, opacity: 0.9 }} /><Polyline positions={route.slice(Math.max(predictionStep - 1, 0))} pathOptions={{ color: '#2781aa', weight: 4, opacity: 0.72, dashArray: '8 9' }} /></>}
+      {layers.cameras && <Marker position={route[0]} icon={vehicleIcon} eventHandlers={{ click: () => focusPoint(route[0], vehicleStatus) }}><Tooltip permanent direction="top" offset={[0, -14]}>Last camera · {incident.location}</Tooltip></Marker>}
+      {layers.patrols && <><Marker position={route[Math.floor(route.length / 2)]} icon={officerIcon} eventHandlers={{ click: () => focusPoint(route[Math.floor(route.length / 2)], officerStatus) }}><Tooltip permanent direction="right" offset={[12, 0]}>{incident.officer} · {incident.eta} ETA</Tooltip></Marker><CircleMarker center={[21.23, 72.875]} radius={18} pathOptions={{ color: '#16815d', fillColor: '#16815d', fillOpacity: .12, weight: 1, dashArray: '4 5' }} /></>}
+      {layers.zones && <Circle center={incident.id === 'ALT-20260908-001' ? [21.225, 72.88] : [23.25, 72.67]} radius={1200} pathOptions={{ color: '#d99b2b', fillColor: '#f4c56a', fillOpacity: .12, weight: 2, dashArray: '7 6' }}><Tooltip>Active response zone</Tooltip></Circle>}
+      {layers.prediction && <Marker position={predictedPoint} icon={nextPointIcon} eventHandlers={{ click: () => focusPoint(predictedPoint, destinationStatus) }}><Tooltip permanent direction="top" offset={[0, -12]}>Predicted next · {incident.officerLocation}</Tooltip></Marker>}
+      {layers.clusters && <CircleMarker center={mapCenter} radius={22} pathOptions={{ color: '#2781aa', fillColor: '#2781aa', fillOpacity: .18, weight: 1 }}><Tooltip>3 nearby signals · zoom to inspect</Tooltip></CircleMarker>}
     </MapContainer>
   );
 }
@@ -108,8 +109,22 @@ function Investigation() {
   const [ticketState, setTicketState] = useState('ready');
   const [predictionStep, setPredictionStep] = useState(2);
   const [categoryFilter, setCategoryFilter] = useState('All');
+  const [search, setSearch] = useState('');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [layers, setLayers] = useState({ route: true, cameras: true, patrols: true, prediction: true, zones: false, clusters: false });
+  const [actionState, setActionState] = useState('ready');
   const incident = incidents.find((item) => item.id === selectedId);
-  const filteredIncidents = categoryFilter === 'All' ? incidents : incidents.filter((item) => item.category === categoryFilter);
+  const filteredIncidents = incidents.filter((item) => {
+    const matchesCategory = categoryFilter === 'All' || item.category === categoryFilter;
+    const query = search.toLowerCase();
+    return matchesCategory && (!query || `${item.subject} ${item.location} ${item.category} ${item.id}`.toLowerCase().includes(query));
+  });
+
+  useEffect(() => {
+    if (!isPlaying) return undefined;
+    const timer = window.setInterval(() => setPredictionStep((step) => (step >= 4 ? 1 : step + 1)), 900);
+    return () => window.clearInterval(timer);
+  }, [isPlaying]);
 
   const speakBriefing = () => {
     speakWithNaturalVoice(languageMessages[language], language);
@@ -135,8 +150,10 @@ function Investigation() {
         <div className="incident-main">
           <div className="incident-tabs">
             <strong>Cross-department alerts</strong><span className="incident-count">{incidents.length} active</span>
-            <div className="severity-filters">{['All', 'Police', 'Food Safety', 'Civil Supplies'].map((item) => <button key={item} type="button" className={categoryFilter === item ? 'active' : ''} onClick={() => setCategoryFilter(item)}>{item}</button>)}</div>
+            <div className="severity-filters">{['All', 'Police', 'Food Safety', 'Civil Supplies'].map((item) => <button key={item} type="button" className={categoryFilter === item ? 'active' : ''} onClick={() => { const matchingIncident = item === 'All' ? incidents[0] : incidents.find((alert) => alert.category === item); setCategoryFilter(item); if (matchingIncident) { setSelectedId(matchingIncident.id); setTicketState('ready'); setPredictionStep(2); } }}>{item}</button>)}</div>
           </div>
+
+          <div className="map-tools"><label className="alert-search"><span>⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search plate, location, alert ID..." /></label><div className="layer-tools">{Object.entries({ cameras: 'Cameras', patrols: 'Patrols', route: 'Routes', prediction: 'AI forecast', zones: 'Geofences', clusters: 'Clusters' }).map(([key, label]) => <button key={key} type="button" className={layers[key] ? 'active' : ''} onClick={() => setLayers((current) => ({ ...current, [key]: !current[key] }))}>{label}</button>)}</div></div>
 
           <div className="incident-list">
             {filteredIncidents.map((item) => (
@@ -151,7 +168,7 @@ function Investigation() {
 
           <div className="route-map" aria-label="Live Gujarat vehicle route map">
             <div className="map-region-label">GUJARAT · LIVE PATROL ROUTE</div>
-            <RouteMapView incident={incident} language={language} predictionStep={predictionStep} />
+            <RouteMapView incident={incident} language={language} predictionStep={predictionStep} layers={layers} />
             <div className="route-legend"><span><i className="legend-route" />Observed route</span><span><i className="legend-prediction" />AI prediction</span></div>
           </div>
         </div>
@@ -163,9 +180,10 @@ function Investigation() {
           <div className="vehicle-identity"><div className={`vehicle-icon ${incident.icon}`}><span>{incident.icon === 'car' ? '▰' : incident.icon === 'food' ? '◆' : '▣'}</span></div><div><strong>{incident.subject}</strong><span>{incident.category} · {incident.type}</span></div><b>{incident.confidence}</b></div>
           <dl className="detail-facts"><div><dt>Last seen</dt><dd>{incident.location}</dd></div><div><dt>Direction</dt><dd>South-east · 48 km/h</dd></div><div><dt>Captured</dt><dd>{incident.time} · Camera CAM-SRT-00421</dd></div></dl>
           <div className="patrol-match"><div className="patrol-heading"><span>Nearest patrol officer</span><em>{incident.eta} ETA</em></div><strong>{incident.officer}</strong><span>{incident.officerId}</span><small>Currently near {incident.officerLocation}</small></div>
-          <div className="prediction-lens"><div className="prediction-heading"><span><i />AI activity lens</span><strong>{incident.confidence}</strong></div><p>Next likely response point: <b>{incident.officerLocation}</b></p><label htmlFor="prediction-progress"><span>Signal progression</span><span>{predictionStep + 1} of 5 points</span></label><input id="prediction-progress" type="range" min="1" max="4" value={predictionStep} onChange={(event) => setPredictionStep(Number(event.target.value))} /><div className="prediction-scale"><span>Detected</span><span>Correlated</span><span>Response</span></div></div>
+          <div className="prediction-lens"><div className="prediction-heading"><span><i />AI activity lens</span><strong>{incident.confidence}</strong></div><p>Next likely response point: <b>{incident.officerLocation}</b></p><label htmlFor="prediction-progress"><span>Signal progression</span><span>{predictionStep + 1} of 5 points</span></label><input id="prediction-progress" type="range" min="1" max="4" value={predictionStep} onChange={(event) => setPredictionStep(Number(event.target.value))} /><div className="prediction-scale"><span>Detected</span><span>Correlated</span><span>Response</span></div><button type="button" className={`playback-button ${isPlaying ? 'playing' : ''}`} onClick={() => setIsPlaying((playing) => !playing)}>{isPlaying ? 'Pause route playback' : 'Play route playback'} <span>{isPlaying ? 'Ⅱ' : '▶'}</span></button></div>
           <div className="briefing-language"><span>Briefing language</span>{['English', 'Hindi', 'Gujarati'].map((item) => <button key={item} type="button" className={language === item ? 'active' : ''} onClick={() => setLanguage(item)}>{item}</button>)}</div>
-          <button type="button" className={`assign-ticket ${ticketState}`} onClick={assignTicket}>{ticketState === 'assigned' ? '✓ Ticket assigned & officer briefed' : 'Assign interception ticket'}<span>→</span></button>
+          <div className="dispatch-actions"><button type="button" className={`assign-ticket ${ticketState}`} onClick={() => { setActionState('assigned'); assignTicket(); }}>{ticketState === 'assigned' ? '✓ Ticket assigned & officer briefed' : 'Assign response ticket'}<span>→</span></button><button type="button" className={`secondary-action ${actionState === 'acknowledged' ? 'done' : ''}`} onClick={() => setActionState('acknowledged')}>{actionState === 'acknowledged' ? '✓ Alert acknowledged' : 'Acknowledge alert'}</button></div>
+          <div className="audit-trail"><span>Audit trail</span><small>21:43 · AI match created</small><small>21:44 · {actionState === 'acknowledged' ? 'Operator acknowledged alert' : 'Awaiting operator acknowledgement'}</small></div>
           <p className="human-note">Officer confirmation is required before any field action.</p>
         </aside>
       </section>

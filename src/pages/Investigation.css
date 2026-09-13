@@ -27,3 +27,12 @@
 .route-legend::after { content: 'Click a marker for zoom + voice status'; display: block; margin-top: 5px; color: #2781aa; font-size: .56rem; font-weight: 700; }
 @media (max-width: 900px) { .route-map { height: 390px; } }
 @media (max-width: 620px) { .route-map { height: 330px; } }
+
+.map-tools { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #e2ebef; background: #fbfdfe; }
+.alert-search { display: flex; align-items: center; gap: 7px; min-width: 210px; padding: 8px 10px; border: 1px solid #d9e6ec; border-radius: 7px; background: #fff; color: #7e95a3; }
+.alert-search input { min-width: 0; width: 100%; border: 0; outline: 0; color: #284a62; font: inherit; font-size: .65rem; }.alert-search input::placeholder { color: #9aacba; }
+.layer-tools { display: flex; flex-wrap: wrap; gap: 5px; }.layer-tools button { padding: 6px 8px; border: 1px solid #dbe7ed; border-radius: 5px; background: #fff; color: #708594; cursor: pointer; font-size: .6rem; }.layer-tools button.active { border-color: #91c9dd; background: #eaf7fc; color: #176789; }
+.route-legend .legend-prediction { height: 0; border-top: 2px dashed #2781aa; background: transparent; }
+.playback-button { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 12px; padding: 8px 10px; border: 1px solid #b7d8e4; border-radius: 6px; background: #fff; color: #176789; cursor: pointer; font-size: .62rem; font-weight: 700; }.playback-button.playing { background: #eaf7fc; }.playback-button span { font-size: .7rem; }
+.dispatch-actions { display: grid; gap: 8px; margin-top: 20px; }.dispatch-actions .assign-ticket { margin-top: 0; }.secondary-action { padding: 9px; border: 1px solid #d6e3e9; border-radius: 7px; background: #fff; color: #647d8d; cursor: pointer; font: inherit; font-size: .65rem; font-weight: 700; }.secondary-action.done { border-color: #bfe9dc; background: #f2fcf8; color: #16815d; }.audit-trail { display: grid; gap: 4px; margin-top: 17px; padding-top: 12px; border-top: 1px solid #e6eef1; }.audit-trail span { color: #496779; font-size: .65rem; font-weight: 800; }.audit-trail small { color: #91a3ae; font-size: .58rem; }
+@media (max-width: 620px) { .map-tools { display: block; }.alert-search { min-width: 0; }.layer-tools { margin-top: 8px; } }
