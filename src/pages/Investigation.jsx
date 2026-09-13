@@ -62,10 +62,10 @@ function RouteMapView({ incident, language, predictionStep }) {
   };
 
   const vehicleStatus = language === 'Gujarati'
-    ? `વાહન ${incident.plate} કલાક દીઠ 48 કિલોમીટરની ઝડપે ${incident.officerLocation} તરફ જઈ રહ્યું છે. છેલ્લે ${incident.location} પર જોવા મળ્યું.`
+    ? incident.icon === 'car' ? `વાહન ${incident.subject} કલાક દીઠ 48 કિલોમીટરની ઝડપે ${incident.officerLocation} તરફ જઈ રહ્યું છે. છેલ્લે ${incident.location} પર જોવા મળ્યું.` : `${incident.category} માટેનું ${incident.subject} એલર્ટ ${incident.location} પર મળ્યું છે. ${incident.officer} તપાસ માટે ${incident.eta} દૂર છે.`
     : language === 'Hindi'
-      ? `वाहन ${incident.plate} 48 किलोमीटर प्रति घंटे की रफ्तार से ${incident.officerLocation} की ओर जा रहा है। इसे आखिरी बार ${incident.location} पर देखा गया।`
-      : `Vehicle ${incident.plate} is driving at 48 kilometres per hour toward ${incident.officerLocation}. Last seen at ${incident.location}.`;
+      ? incident.icon === 'car' ? `वाहन ${incident.subject} 48 किलोमीटर प्रति घंटे की रफ्तार से ${incident.officerLocation} की ओर जा रहा है। इसे आखिरी बार ${incident.location} पर देखा गया।` : `${incident.category} का ${incident.subject} अलर्ट ${incident.location} पर मिला है। ${incident.officer} जांच के लिए ${incident.eta} दूर हैं।`
+      : incident.icon === 'car' ? `Vehicle ${incident.subject} is driving at 48 kilometres per hour toward ${incident.officerLocation}. Last seen at ${incident.location}.` : `${incident.category} alert for ${incident.subject} was detected at ${incident.location}. ${incident.officer} is ${incident.eta} away for verification.`;
   const officerStatus = language === 'Gujarati'
     ? `${incident.officer}, પેટ્રોલ ID ${incident.officerId}, સૌથી નજીકના અધિકારી છે। પહોંચવાનો અંદાજિત સમય ${incident.eta} છે.`
     : language === 'Hindi'
@@ -90,8 +90,10 @@ function RouteMapView({ incident, language, predictionStep }) {
 }
 
 const incidents = [
-  { id: 'ALT-20260908-001', plate: 'GJ05X7821', type: 'White Honda City Sedan', location: 'Surat Ring Road', zone: 'NH-53 Junction', time: '21:43:12', severity: 'Critical', confidence: '98.7%', officer: 'PSI Rakesh Solanki', officerId: 'PAT-SRT-0042', officerLocation: 'Varachha Junction', eta: '4 min' },
-  { id: 'ALT-20260908-002', plate: 'GJ01AB4456', type: 'Dark Blue SUV', location: 'Gandhinagar Road', zone: 'Infocity Circle', time: '21:38:06', severity: 'High', confidence: '93.2%', officer: 'ASI Mehul Desai', officerId: 'PAT-GNR-0018', officerLocation: 'Sargasan Cross Road', eta: '7 min' },
+  { id: 'ALT-20260908-001', category: 'Police', icon: 'car', subject: 'GJ05X7821', type: 'White Honda City Sedan', location: 'Surat Ring Road', zone: 'NH-53 Junction', time: '21:43:12', severity: 'Critical', confidence: '98.7%', officer: 'PSI Rakesh Solanki', officerId: 'PAT-SRT-0042', officerLocation: 'Varachha Junction', eta: '4 min', action: 'Vehicle match detected' },
+  { id: 'ALT-20260908-002', category: 'Police', icon: 'car', subject: 'GJ01AB4456', type: 'Dark Blue SUV', location: 'Gandhinagar Road', zone: 'Infocity Circle', time: '21:38:06', severity: 'High', confidence: '93.2%', officer: 'ASI Mehul Desai', officerId: 'PAT-GNR-0018', officerLocation: 'Sargasan Cross Road', eta: '7 min', action: 'Vehicle match detected' },
+  { id: 'ALT-20260908-003', category: 'Food Safety', icon: 'food', subject: 'Cold storage stock mismatch', type: 'Suspected edible oil diversion', location: 'APMC Market Yard', zone: 'Ahmedabad East', time: '21:31:44', severity: 'High', confidence: '91.4%', officer: 'Food Inspector Nisha Shah', officerId: 'FSI-AHM-0071', officerLocation: 'Naroda Inspection Unit', eta: '12 min', action: 'Stock anomaly detected' },
+  { id: 'ALT-20260908-004', category: 'Civil Supplies', icon: 'box', subject: 'Ration depot inventory anomaly', type: 'Possible PDS stock theft', location: 'Kalupur Distribution Depot', zone: 'Ahmedabad Central', time: '21:26:08', severity: 'Critical', confidence: '96.1%', officer: 'CSO Harsh Trivedi', officerId: 'CIV-AHM-0033', officerLocation: 'Relief Road Supply Office', eta: '9 min', action: 'Inventory theft alert' },
 ];
 
 const languageMessages = {
@@ -105,7 +107,9 @@ function Investigation() {
   const [language, setLanguage] = useState('English');
   const [ticketState, setTicketState] = useState('ready');
   const [predictionStep, setPredictionStep] = useState(2);
+  const [categoryFilter, setCategoryFilter] = useState('All');
   const incident = incidents.find((item) => item.id === selectedId);
+  const filteredIncidents = categoryFilter === 'All' ? incidents : incidents.filter((item) => item.category === categoryFilter);
 
   const speakBriefing = () => {
     speakWithNaturalVoice(languageMessages[language], language);
@@ -130,15 +134,15 @@ function Investigation() {
       <section className="incident-layout">
         <div className="incident-main">
           <div className="incident-tabs">
-            <strong>Vehicle detections</strong><span className="incident-count">{incidents.length} active</span>
-            <div className="severity-filters"><button className="active">All</button><button>Critical</button><button>High</button></div>
+            <strong>Cross-department alerts</strong><span className="incident-count">{incidents.length} active</span>
+            <div className="severity-filters">{['All', 'Police', 'Food Safety', 'Civil Supplies'].map((item) => <button key={item} type="button" className={categoryFilter === item ? 'active' : ''} onClick={() => setCategoryFilter(item)}>{item}</button>)}</div>
           </div>
 
           <div className="incident-list">
-            {incidents.map((item) => (
+            {filteredIncidents.map((item) => (
                 <button key={item.id} type="button" className={`incident-row ${selectedId === item.id ? 'selected' : ''}`} onClick={() => { setSelectedId(item.id); setTicketState('ready'); setPredictionStep(2); }}>
                 <span className={`severity-dot ${item.severity.toLowerCase()}`} />
-                <span className="incident-row-copy"><strong>{item.plate}</strong><small>{item.type} · {item.location}</small></span>
+                <span className="incident-row-copy"><strong>{item.subject}</strong><small>{item.category} · {item.location}</small></span>
                 <span className="incident-row-meta"><strong>{item.severity}</strong><small>{item.time}</small></span>
                 <span className="row-arrow">→</span>
               </button>
@@ -154,12 +158,12 @@ function Investigation() {
 
         <aside className="incident-detail">
           <div className="detail-topline"><span className="critical-label">● {incident.severity}</span><span>{incident.id}</span></div>
-          <h2>Vehicle match detected</h2>
-          <p className="detail-subtitle">AI watchlist match requires officer verification.</p>
-          <div className="vehicle-identity"><div className="vehicle-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 16l1.4-5h11.2l1.4 5"/><path d="M4 16h16v4H4z"/><path d="M7 11l1.4-3h7.2l1.4 3"/><circle cx="7" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/></svg></div><div><strong>{incident.plate}</strong><span>{incident.type}</span></div><b>{incident.confidence}</b></div>
+          <h2>{incident.action}</h2>
+          <p className="detail-subtitle">AI signal requires department officer verification.</p>
+          <div className="vehicle-identity"><div className={`vehicle-icon ${incident.icon}`}><span>{incident.icon === 'car' ? '▰' : incident.icon === 'food' ? '◆' : '▣'}</span></div><div><strong>{incident.subject}</strong><span>{incident.category} · {incident.type}</span></div><b>{incident.confidence}</b></div>
           <dl className="detail-facts"><div><dt>Last seen</dt><dd>{incident.location}</dd></div><div><dt>Direction</dt><dd>South-east · 48 km/h</dd></div><div><dt>Captured</dt><dd>{incident.time} · Camera CAM-SRT-00421</dd></div></dl>
           <div className="patrol-match"><div className="patrol-heading"><span>Nearest patrol officer</span><em>{incident.eta} ETA</em></div><strong>{incident.officer}</strong><span>{incident.officerId}</span><small>Currently near {incident.officerLocation}</small></div>
-          <div className="prediction-lens"><div className="prediction-heading"><span><i />Prediction lens</span><strong>{incident.confidence}</strong></div><p>Next likely location: <b>{incident.officerLocation}</b></p><label htmlFor="prediction-progress"><span>Route forecast</span><span>{predictionStep + 1} of 5 points</span></label><input id="prediction-progress" type="range" min="1" max="4" value={predictionStep} onChange={(event) => setPredictionStep(Number(event.target.value))} /><div className="prediction-scale"><span>Observed</span><span>Likely path</span><span>Next point</span></div></div>
+          <div className="prediction-lens"><div className="prediction-heading"><span><i />AI activity lens</span><strong>{incident.confidence}</strong></div><p>Next likely response point: <b>{incident.officerLocation}</b></p><label htmlFor="prediction-progress"><span>Signal progression</span><span>{predictionStep + 1} of 5 points</span></label><input id="prediction-progress" type="range" min="1" max="4" value={predictionStep} onChange={(event) => setPredictionStep(Number(event.target.value))} /><div className="prediction-scale"><span>Detected</span><span>Correlated</span><span>Response</span></div></div>
           <div className="briefing-language"><span>Briefing language</span>{['English', 'Hindi', 'Gujarati'].map((item) => <button key={item} type="button" className={language === item ? 'active' : ''} onClick={() => setLanguage(item)}>{item}</button>)}</div>
           <button type="button" className={`assign-ticket ${ticketState}`} onClick={assignTicket}>{ticketState === 'assigned' ? '✓ Ticket assigned & officer briefed' : 'Assign interception ticket'}<span>→</span></button>
           <p className="human-note">Officer confirmation is required before any field action.</p>

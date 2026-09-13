@@ -21,6 +21,7 @@
 .investigation-vehicle-marker svg, .investigation-officer-marker svg, .investigation-next-marker svg, .vehicle-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 .investigation-vehicle-marker svg { color: #fff; }.investigation-officer-marker svg { color: #fff; }.investigation-next-marker svg { color: #fff; }.vehicle-icon svg { width: 20px; height: 20px; }
 .investigation-vehicle-marker { background: #e64655; }.investigation-officer-marker { background: #16815d; animation: patrol-pulse 1.6s infinite; }.investigation-next-marker { background: #e09d25; }
+.vehicle-icon.food { background: #fff4dc; color: #c77e13; }.vehicle-icon.box { background: #f2eaff; color: #7c50b5; }
 .leaflet-tooltip { border: 0; border-radius: 5px; color: #26475c; font-size: .62rem; font-weight: 700; box-shadow: 0 2px 8px rgba(30,65,85,.16); }
 .route-legend { z-index: 500; padding: 7px 9px; border-radius: 5px; background: rgba(255,255,255,.9); color: #557180; box-shadow: 0 2px 8px rgba(35,70,88,.12); }
 .route-legend::after { content: 'Click a marker for zoom + voice status'; display: block; margin-top: 5px; color: #2781aa; font-size: .56rem; font-weight: 700; }
