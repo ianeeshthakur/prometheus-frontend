@@ -81,7 +81,7 @@ function RouteMapView({ incident, language, predictionStep, layers }) {
     <MapContainer ref={mapRef} className="investigation-leaflet-map" center={mapCenter} zoom={11} scrollWheelZoom={false} zoomControl={true}>
       <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       {layers.route && <><Polyline positions={route.slice(0, predictionStep + 1)} pathOptions={{ color: '#ef4b5c', weight: 6, opacity: 0.9 }} /><Polyline positions={route.slice(Math.max(predictionStep - 1, 0))} pathOptions={{ color: '#2781aa', weight: 4, opacity: 0.72, dashArray: '8 9' }} /></>}
-      {layers.cameras && <Marker position={route[0]} icon={vehicleIcon} eventHandlers={{ click: () => focusPoint(route[0], vehicleStatus) }}><Tooltip permanent direction="top" offset={[0, -14]}>Last camera · {incident.location}</Tooltip></Marker>}
+      {layers.cameras && <Marker position={route[0]} icon={vehicleIcon} eventHandlers={{ click: () => focusPoint(route[0], vehicleStatus) }}><Tooltip permanent direction="top" offset={[0, -14]}>Source location · {incident.location}</Tooltip></Marker>}
       {layers.patrols && <><Marker position={route[Math.floor(route.length / 2)]} icon={officerIcon} eventHandlers={{ click: () => focusPoint(route[Math.floor(route.length / 2)], officerStatus) }}><Tooltip permanent direction="right" offset={[12, 0]}>{incident.officer} · {incident.eta} ETA</Tooltip></Marker><CircleMarker center={[21.23, 72.875]} radius={18} pathOptions={{ color: '#16815d', fillColor: '#16815d', fillOpacity: .12, weight: 1, dashArray: '4 5' }} /></>}
       {layers.zones && <Circle center={incident.id === 'ALT-20260908-001' ? [21.225, 72.88] : [23.25, 72.67]} radius={1200} pathOptions={{ color: '#d99b2b', fillColor: '#f4c56a', fillOpacity: .12, weight: 2, dashArray: '7 6' }}><Tooltip>Active response zone</Tooltip></Circle>}
       {layers.prediction && <Marker position={predictedPoint} icon={nextPointIcon} eventHandlers={{ click: () => focusPoint(predictedPoint, destinationStatus) }}><Tooltip permanent direction="top" offset={[0, -12]}>Predicted next · {incident.officerLocation}</Tooltip></Marker>}
@@ -166,7 +166,7 @@ function Investigation() {
             ))}
           </div>
 
-          <div className="route-map" aria-label="Live Gujarat vehicle route map">
+          <div className="route-map" aria-label="Live Gujarat incident response map">
             <div className="map-region-label">GUJARAT · LIVE PATROL ROUTE</div>
             <RouteMapView incident={incident} language={language} predictionStep={predictionStep} layers={layers} />
             <div className="route-legend"><span><i className="legend-route" />Observed route</span><span><i className="legend-prediction" />AI prediction</span></div>
