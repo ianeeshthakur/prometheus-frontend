@@ -67,9 +67,10 @@ function ArchitectureFlow() {
 
   useEffect(() => {
     let animationFrame;
-    const startedAt = performance.now();
+    let startedAt = null;
 
     const animate = (timestamp) => {
+      if (startedAt === null) startedAt = timestamp;
       const elapsed = (timestamp - startedAt) % (STAGE_DURATION * STAGE_COUNT);
       const stage = Math.floor(elapsed / STAGE_DURATION);
       const stageElapsed = elapsed % STAGE_DURATION;
