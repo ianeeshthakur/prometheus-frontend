@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import CameraMap from '../components/CameraMap';
 import TelemetryTicker from '../components/TelemetryTicker';
 import { DEPARTMENT_COLORS } from '../data/cameras';
@@ -388,6 +389,30 @@ const DepartmentDonut = React.memo(function DepartmentDonut() {
 });
 
 // ============================================================================
+// Command Center Priority Strip
+// ============================================================================
+
+function CommandPriorityStrip() {
+  const [acknowledged, setAcknowledged] = useState(false);
+
+  return (
+    <section className="command-priority-strip" aria-label="Command priority summary">
+      <div className="priority-alert-block">
+        <span className="priority-alert-icon">!</span>
+        <div>
+          <span className="priority-kicker">Priority response</span>
+          <strong>GJ05X7821 · Vehicle match detected</strong>
+          <small>Surat Ring Road · 98.7% AI confidence · 2 min ago</small>
+        </div>
+      </div>
+      <div className="priority-metric"><span>Nearest patrol</span><strong>PSI Rakesh Solanki</strong><small><i /> 4 min ETA · PAT-SRT-0042</small></div>
+      <div className="priority-metric"><span>Response state</span><strong className={acknowledged ? 'state-acknowledged' : 'state-pending'}>{acknowledged ? 'Acknowledged' : 'Needs review'}</strong><small>Officer confirmation required</small></div>
+      <div className="priority-actions"><button type="button" className={`priority-acknowledge ${acknowledged ? 'done' : ''}`} onClick={() => setAcknowledged((value) => !value)}>{acknowledged ? '✓ Acknowledged' : 'Acknowledge'}</button><Link to="/investigation" className="priority-open">Open incident <span>→</span></Link></div>
+    </section>
+  );
+}
+
+// ============================================================================
 // Main Dashboard Component
 // ============================================================================
 
@@ -439,6 +464,9 @@ function Dashboard() {
 
       {/* 3. Ambient Live Telemetry Ticker Strip */}
       <TelemetryTicker />
+
+      {/* 3.5 Operator-first triage before aggregate metrics */}
+      <CommandPriorityStrip />
 
       {/* 4. Stats Cards (Step B: Cascading Entrance + Digital Scramble) */}
       <section className="stats-grid">
