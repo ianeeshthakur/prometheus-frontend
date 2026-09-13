@@ -468,7 +468,13 @@ function Dashboard() {
       {/* 3.5 Operator-first triage before aggregate metrics */}
       <CommandPriorityStrip />
 
-      {/* 4. Stats Cards (Step B: Cascading Entrance + Digital Scramble) */}
+      {/* 4. Map-first operational view */}
+      <section className="widgets-row dashboard-map-first">
+        <CameraMap />
+        <DepartmentDonut />
+      </section>
+
+      {/* 5. Aggregate metrics after the operational map */}
       <section className="stats-grid">
         <StatCard
           cardIndex={0}
@@ -541,11 +547,6 @@ function Dashboard() {
         />
       </section>
 
-      {/* 5. Main Widgets: Leaflet Map (Step C) + Donut Chart (Step D) */}
-      <section className="widgets-row">
-        <CameraMap />
-        <DepartmentDonut />
-      </section>
     </div>
   );
 }
