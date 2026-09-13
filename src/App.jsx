@@ -10,6 +10,7 @@ import Model4 from './pages/Model4';
 import Investigation from './pages/Investigation';
 import Settings from './pages/Settings';
 import LoginScreen from './pages/LoginScreen';
+import ArchitectureFlow from './pages/ArchitectureFlow';
 import './components/Layout.css';
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
                 <Route path="/model-3" element={<Model3 />} />
                 <Route path="/model-4" element={<Model4 />} />
                 <Route path="/investigation" element={<Investigation />} />
+                <Route path="/architecture-flow" element={<ArchitectureFlow />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

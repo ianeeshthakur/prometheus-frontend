@@ -80,6 +80,18 @@ const navItems = [
     ),
   },
   {
+    label: 'Architecture Flow',
+    path: '/architecture-flow',
+    icon: (
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="5" r="2.5" />
+        <circle cx="5" cy="18" r="2.5" />
+        <circle cx="19" cy="18" r="2.5" />
+        <path d="M10.8 7.2 6.2 15.8M13.2 7.2l4.6 8.6M7.5 18h9" />
+      </svg>
+    ),
+  },
+  {
     label: 'Settings',
     path: '/settings',
     icon: (
